@@ -47,8 +47,8 @@ print(df)
 df.to_csv(csv_path)
 
 #將DataFrame資料存入SQL資料庫中
-conn = sqlite3.connect(db_name) #在sqlite3搜尋/創建名為db_name資料庫
-#df資料存入名為db_name資料庫中 並命名成table_name 如果table_name已經存在則覆寫 並不讓df的index存入SQL中
+conn = sqlite3.connect(db_name) #在sqlite3搜尋/創建名為db_name('Movies.db')資料庫
+#df資料存入名為db_name資料庫中 並命名成table_name('Top_50') 如果table_name已經存在則覆寫 並不讓df的index存入SQL中
 df.to_sql(table_name, conn, if_exists='replace', index=False) #conn 是資料庫連接物件
 conn.close() #關閉SQL
 
