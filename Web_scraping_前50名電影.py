@@ -5,6 +5,12 @@ import sqlite3
 import pandas as pd
 from bs4 import BeautifulSoup
 
+#sqlite3是一個輕量級的 SQL 資料庫引擎，具有以下特色
+    #自給自足：SQLite 是一個自包含的資料庫引擎，不需要額外的伺服器軟體。
+    #無伺服器：SQLite 是無伺服器的，這意味著它不需要單獨的伺服器進程來運行。資料庫文件可以直接在應用程式中打開和操作。
+    #零配置：SQLite 不需要任何配置或管理，這使得它非常容易使用。
+    #高可靠性：SQLite 被設計為高可靠性和高性能的資料庫引擎，適合嵌入式系統和應用程式。
+
 url= 'https://web.archive.org/web/20230902185655/https://en.everybodywiki.com/100_Most_Highly-Ranked_Films'
 db_name = 'Movies.db' 
 table_name = 'Top_50'
@@ -45,3 +51,4 @@ conn = sqlite3.connect(db_name) #在sqlite3搜尋/創建名為db_name資料庫
 #df資料存入名為db_name資料庫中 並命名成table_name 如果table_name已經存在則覆寫 並不讓df的index存入SQL中
 df.to_sql(table_name, conn, if_exists='replace', index=False) #conn 是資料庫連接物件
 conn.close() #關閉SQL
+
