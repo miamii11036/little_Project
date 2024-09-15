@@ -24,13 +24,13 @@ html_page = requests.get(url).text
 data = BeautifulSoup(html_page,'html.parser')
 
 #從BeautifulSoup分析的資料中 將所有tobody的資料存近變數table中
-tables = data.find_all('tbody') #每個list元素是一個tobody
+tables = data.find_all('tbody') #每個元素是一個tobody
 #從變數table中指定第一個tobody(目標資料table) 並將其中所有row資料存近rows變數中
-rows = tables[0].find_all('tr') #每個list元素是一行
+rows = tables[0].find_all('tr') #每個元素是一行
 
 for row in rows:
     if count<50: #截取目標資料table的前50行資料
-        col = row.find_all('td') #每個list元素為行內的values
+        col = row.find_all('td') #每個元素為行內的values
         if len(col)!=0: #確保每個values不是NULL
             data_dict = {'Average Rank':col[0].contents[0], #抓取每個tr的第一個td，並返回其第一個元素內容
                         'Film':col[1].contents[0], #抓取每個tr的第二個td，並返回其第一個元素內容
