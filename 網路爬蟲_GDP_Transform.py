@@ -46,7 +46,7 @@ df['2023年GDP']=pd.to_numeric(df['2023年GDP'], errors='coerce')
 df['2023年GDP'] = (df['2023年GDP']/10**6).round(2)
 
 df = df.dropna(subset=['2023年GDP'])
-up_1_billion= df[(df['2023年GDP']>=1.00)]
+up_1_billion= df[(df['2023年GDP']>=0.1)]
 
 up_1_billion.rename(columns={'2023年GDP':'2023年GDP(十億美元)'},inplace=True)
 
