@@ -43,7 +43,7 @@ df.reset_index(drop=True, inplace=True)
 
 df['2023年GDP'] = df['2023年GDP'].str.replace(',','')
 df['2023年GDP']=pd.to_numeric(df['2023年GDP'], errors='coerce')
-df['2023年GDP'] = (df['2023年GDP']/10**6).round(2)
+df['2023年GDP'] = (df['2023年GDP']/1000).round(2)
 
 df = df.dropna(subset=['2023年GDP'])
 up_1_billion= df[(df['2023年GDP']>=0.1)]
