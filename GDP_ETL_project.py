@@ -31,7 +31,7 @@ def extract(url, table_attribs):
         cell = row.find_all('td')
         #設立條件，確保row裡面確實有'td'
         if len(cell) !=0:
-            #刪除目標table中的全球資料，只截取tr中第一個td有<a>額外連結且第二個td沒有'—'
+            #刪除目標table中的全球資料，只截取tr中第一個td有<a>額外連結且第三個td沒有'—'
             if cell[0].find('a') is not None and '—' not in cell[2]:
                 goal_dic = {table_attribs[0]:cell[0].text,
                             table_attribs[1]:cell[2].text}
