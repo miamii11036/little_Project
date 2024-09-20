@@ -14,10 +14,6 @@ import sqlite3
 import numpy as np
 from datetime import datetime
 
-    # Code for ETL operations on Country-GDP data
-
-# Importing the required libraries
-
 def log_progress(message):
     with open (Log_file,'a')as f:
         f.write(f'{datetime.now()}: {message}\n')
