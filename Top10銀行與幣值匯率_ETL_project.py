@@ -19,91 +19,92 @@ from datetime import datetime
 # Importing the required libraries
 
 def log_progress(message):
-    ''' This function logs the mentioned message of a given stage of the
-    code execution to a log file. Function returns nothing'''
-    timestamp_format = '%Y-%h-%d:%H:%M:%S'
-    now = datetime.now()
-    time_stamp = now.strftime(timestamp_format)
     with open (Log_file,'a')as f:
-        f.write(message + ':' + time_stamp + '\n')
+        f.write(f'{datetime.now()}: {message}\n')
 
 
 def extract(data_URL, Table_Attributes_Extraction):
-    ''' This function aims to extract the required
-    information from the website and save it to a data frame. The
-    function returns the data frame for further processing. '''
-    html_page = requests.get(data_URL).text
-    html_data = BeautifulSoup(html_page,'html.parser')
-    table = html_data.find_all('tbody')
-    rows = table[0].find_all('tr')
-    extract_dataframe = pd.DataFrame(columns = Table_Attributes_Extraction)
-    for row in rows:
-        cell = row.find_all('td')
-        if len(cell) != 0:
-            extract_dic = {Table_Attributes_Extraction[0]:cell[1].get_text(strip=True),
-                            Table_Attributes_Extraction[1]:cell[2].get_text(strip=True)}
-            extract = pd.DataFrame(extract_dic, index=[0])
-            extract[Table_Attributes_Extraction[1]] = extract[Table_Attributes_Extraction[1]].astype("float64")
-            extract_dataframe = pd.concat([extract_dataframe,extract], ignore_index=True)
+    log_progress(f"開始提取資料 {data_URL}")
+    try:
+        html_page = requests.get(data_URL)
+        if html_page.status_code != 200:
+            raise Exception(f"HTML資料提取失敗:{data_URL}")
+        html_data = BeautifulSoup(html_page.text,'html.parser')
+        table = html_data.find_all('tbody')
+        rows = table[0].find_all('tr')
+        extract_dataframe = pd.DataFrame(columns = Table_Attributes_Extraction)
+        for row in rows:
+            cell = row.find_all('td')
+            if len(cell) != 0:
+                extract_dic = {Table_Attributes_Extraction[0]:cell[1].get_text(strip=True),
+                                Table_Attributes_Extraction[1]:cell[2].get_text(strip=True)}
+                extract = pd.DataFrame(extract_dic, index=[0])
+                extract[Table_Attributes_Extraction[1]] = extract[Table_Attributes_Extraction[1]].astype("float64")
+                extract_dataframe = pd.concat([extract_dataframe,extract], ignore_index=True) 
+        log_progress("資料提取完成")
+    except Exception as e:
+        log_progress(f"資料提取失敗: {str(e)}")
+        raise
     return extract_dataframe
 
+df = extract(data_URL, Table_Attributes_Extraction)
+
 def transform(df, csv_path):
-    ''' This function accesses the CSV file for exchange rate
-    information, and adds three columns to the data frame, each
-    containing the transformed version of Market Cap column to
-    respective currencies'''
-    rate_data = pd.read_csv(csv_path)
-    #將Currency設置df的index
-    rate = rate_data.set_index("Currency")
-    #將rate["Rate"]轉變成dictionary
-    rate_dic = rate["Rate"].to_dict()
-    for col in Table_Attributes_final:
-        if col not in df.columns:
-            df[col] = None
-    df['MC_GBP_Billion'] = [np.round(x*rate_dic['GBP'],2) for x in df['MC_USD_Billion']]
-    df['MC_EUR_Billion'] = [np.round(y*rate_dic['EUR'],2) for y in df['MC_USD_Billion']]
-    df['MC_INR_Billion'] = [np.round(z*rate_dic['INR'],2) for z in df['MC_USD_Billion']]
-    return df
+    log_progress("開始轉換匯率")
+    try:
+        rate_data = pd.read_csv(csv_path)
+        #將Currency設置df的index
+        rate = rate_data.set_index("Currency")
+        #將rate["Rate"]轉變成dictionary
+        rate_dic = rate["Rate"].to_dict()
+        for col in Table_Attributes_final:
+            if col not in df.columns:
+                df[col] = None
+        df['MC_GBP_Billion'] = [np.round(x*rate_dic['GBP'],2) for x in df['MC_USD_Billion']]
+        df['MC_EUR_Billion'] = [np.round(y*rate_dic['EUR'],2) for y in df['MC_USD_Billion']]
+        df['MC_INR_Billion'] = [np.round(z*rate_dic['INR'],2) for z in df['MC_USD_Billion']]
+        log_progress("資料轉換完成")
+        return df
+    except FileNotFoundError:
+        log_progress(f"匯率資料發生異常: {csv_path}")
+        raise
+    except Exception as e:
+        log_progress(f"轉換期間發生異常:{str(e)}")
+        raise
+
+df = transform(df, csv_path)
+
 
 def load_to_csv(df, output_CSV_Path):
-    ''' This function saves the final data frame as a CSV file in
-    the provided path. Function returns nothing.'''
-    df.to_csv(output_CSV_Path)
+    log_progress(f"開始儲存資料成csv檔案:{output_CSV_Path}")
+    try:
+        df.to_csv(output_CSV_Path, index=False)
+        log_progress(f"儲存資料成csv檔案:{output_CSV_Path}成功")
+    except Exception as e:
+        log_progress(f"資料儲存成csv檔案時發生異常:{str(e)}")
+        raise
+
+load_to_csv(df, output_CSV_Path)
 
 
-def load_to_db(df, sql_connection, Table_name):
-    ''' This function saves the final data frame to a database
-    table with the provided name. Function returns nothing.'''
-    df.to_sql(Table_name, sql_connection, if_exists="replace",index=False)
+def load_to_db(df, Database_name, Table_name):
+    log_progress(f"開始連結{Database_name}")
+    try:
+        sql_connection = sqlite3.connect(Database_name)
+        log_progress(f"連結{Database_name}成功")
+    except Exception as e:
+        log_progress(f"連結{Database_name}失敗:{str(e)}")
+        raise
+    log_progress("資料開始存入sqlite3")
+    try:
+        df.to_sql(Table_name, sql_connection, if_exists="replace",index=False)
+        log_progress("資料存入sqlite3成功")
+    except Exception as e:
+        log_progress(f"資料存入sqlite3時發生異常:{str(e)}")
+
+load_to_db(df, Database_name, Table_name)   
 
 def run_query(query_statement, sql_connection):
-    ''' This function runs the query on the database table and
-    prints the output on the terminal. Function returns nothing. '''
     print(query_statement)
     query_output = pd.read_sql(query_statement, sql_connection)
     print(query_output)
-
-
-log_progress("Preliminaries complete. Initiating ETL process")
-extract_df = extract(data_URL, Table_Attributes_Extraction)
-log_progress("Data extraction complete. Initiating Transformation process")
-df = transform(extract_df,csv_path)
-log_progress("Data transformation complete. Initiating Loading process")
-load_to_csv(df,output_CSV_Path)
-log_progress("Data saved to CSV file")
-sql_connection = sqlite3.Connection(Database_name)
-
-log_progress("SQL Connection initiated")
-load_to_db(df,sql_connection,Table_name)
-log_progress("Data loaded to Database as a table, Executing queries")
-
-query_statement = "SELECT * FROM Largest_banks"
-run_query(query_statement,sql_connection)
-query_statement_2 = 'SELECT AVG(MC_GBP_Billion) FROM Largest_banks'
-run_query(query_statement_2,sql_connection)
-query_statement_3 = "SELECT Name from Largest_banks LIMIT 5"
-run_query(query_statement_3,sql_connection)
-
-log_progress("Process Complete")
-sql_connection.close()
-log_progress("Server Connection closed")
